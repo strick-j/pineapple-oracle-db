@@ -1,0 +1,32 @@
+terraform {
+  required_version = ">= 1.10.0"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.6"
+    }
+  }
+
+  # Partial backend configuration — supply values at init time:
+  #   terraform init -backend-config=backend.hcl
+  # See backend.hcl.example for required keys.
+  backend "s3" {}
+}
+
+provider "aws" {
+  region = var.aws_region
+
+  default_tags {
+    tags = {
+      I_Owner   = var.i_owner
+      I_Purpose = var.i_purpose
+      ManagedBy = "terraform"
+      Project   = var.project
+    }
+  }
+}

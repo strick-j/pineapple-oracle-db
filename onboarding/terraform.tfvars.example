@@ -1,0 +1,52 @@
+# Copy to terraform.tfvars — do NOT commit terraform.tfvars to source control.
+#
+# CyberArk credentials (cyberark_client_id / cyberark_client_secret) must be
+# supplied as TF_VAR_ environment variables sourced from Conjur via IAM auth.
+# Do NOT put these values in this file.
+
+# AWS & State
+aws_region       = "us-east-2"
+i_owner          = "your-name-or-team"
+state_bucket     = "your-terraform-state-bucket"
+state_key_prefix = "pineapple-oracle-db"
+
+# Conjur — IAM host role authentication
+# CONJUR_AUTHN_IAM_SERVICE_ID must also be set as an environment variable.
+conjur_url         = "https://conjur.example.com"
+conjur_account     = "myaccount"
+conjur_authn_login = "host/aws/sts/my-terraform-role"
+
+# Conjur paths for CyberArk service account credentials
+conjur_cyberark_client_id_path     = "path/to/cyberark/client-id"
+conjur_cyberark_client_secret_path = "path/to/cyberark/client-secret"
+
+# CyberArk Privilege Cloud URLs
+cyberark_identity_url = "https://example.id.cyberark.cloud"
+cyberark_pas_url      = "https://example.privilegecloud.cyberark.cloud"
+
+# cyberark_client_id and cyberark_client_secret are intentionally omitted here.
+# Set them before running terraform apply:
+#
+#   export TF_VAR_cyberark_client_id=$(conjur variable get \
+#     -i "path/to/cyberark/client-id")
+#   export TF_VAR_cyberark_client_secret=$(conjur variable get \
+#     -i "path/to/cyberark/client-secret")
+
+# CyberArk Safe
+cyberark_safe_name               = "Oracle-DB-Safe"
+create_cyberark_safe             = true
+cyberark_safe_owner              = "vault-admin@example.com"
+cyberark_safe_owner_type         = "user"
+cyberark_safe_retention_days     = 7
+cyberark_safe_retention_versions = 5
+cyberark_cpm_name                = "PasswordManager"
+
+# CyberArk account / UAP
+cyberark_platform_id = "Oracle"
+
+# Access policy — add users/groups that need to retrieve the Oracle credential.
+# permission_level: read | approver | manager | full
+cyberark_access_members = {
+  # "app-service@example.com" = { type = "user",  permission_level = "read" }
+  # "dba-team"                = { type = "group", permission_level = "read" }
+}

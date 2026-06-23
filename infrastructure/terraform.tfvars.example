@@ -1,0 +1,32 @@
+# Copy to terraform.tfvars — do NOT commit terraform.tfvars to source control.
+
+# General
+aws_region  = "us-east-2"
+i_owner     = "your-name-or-team"
+i_purpose   = "oracle-database"
+project     = "pineapple-oracle-db"
+environment = "dev"
+
+# Network — supply your existing VPC and subnet IDs
+vpc_id     = "vpc-xxxxxxxxxxxxxxxxx"
+subnet_ids = [
+  "subnet-xxxxxxxxxxxxxxxxx",
+  "subnet-xxxxxxxxxxxxxxxxx",
+]
+
+# Access control
+allowed_cidr_blocks        = ["10.0.0.0/8"]
+allowed_security_group_ids = []
+
+# Oracle RDS
+db_identifier            = "pineapple-oracle-db"
+db_engine                = "oracle-se2"      # oracle-se2 supports license-included
+db_instance_class        = "db.t3.medium"    # minimum supported class for Oracle
+db_allocated_storage     = 50
+db_max_allocated_storage = 200
+db_name                  = "ORCL"
+db_license_model         = "license-included"
+db_multi_az              = false
+db_deletion_protection   = true
+db_skip_final_snapshot   = false
+db_backup_retention_days = 7
