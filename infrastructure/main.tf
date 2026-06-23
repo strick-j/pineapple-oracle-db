@@ -15,9 +15,10 @@ locals {
 # ---------------------------------------------------------------------------
 
 resource "random_password" "db_password" {
-  length           = 20
+  # Oracle RDS passwords: max 30 chars; blocked characters: / ' " @ space &
+  length           = 28
   special          = true
-  override_special = "!#$%&*()-_=+[]{}<>:?"
+  override_special = "!#$%*()-_=+[]{}<>:?"
   min_upper        = 2
   min_lower        = 2
   min_numeric      = 2
