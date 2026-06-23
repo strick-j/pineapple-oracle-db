@@ -1,3 +1,8 @@
+output "connector_pool_identifier_id" {
+  description = "ID of the pool identifier entry for the Oracle DB FQDN"
+  value       = idsec_cmgr_pool_identifier.oracle_db.identifier_id
+}
+
 output "pcloud_account_name" {
   description = "Name of the vaulted Oracle account in Privilege Cloud"
   value       = idsec_pcloud_account.oracle_db.name

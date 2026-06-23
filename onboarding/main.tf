@@ -220,3 +220,18 @@ resource "idsec_policy_db" "oracle_db" {
   depends_on = [idsec_sia_workspaces_db.oracle_db]
 }
 
+# ---------------------------------------------------------------------------
+# Step 7 — Register the Oracle DB hostname in the connector pool
+#
+# Associates the RDS FQDN with the existing connector pool so that SIA
+# connectors in that pool can reach the database target.
+# ---------------------------------------------------------------------------
+
+resource "idsec_cmgr_pool_identifier" "oracle_db" {
+  pool_id = var.connector_pool_id
+  type    = "GENERAL_FQDN"
+  value   = local.db_hostname
+
+  depends_on = [idsec_sia_workspaces_db.oracle_db]
+}
+

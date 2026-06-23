@@ -4,6 +4,9 @@
 # TF_VAR_ environment variables sourced from Conjur via IAM auth.
 # Do NOT put these values in this file.
 
+# Connector Management — existing pool to register the Oracle DB FQDN in
+connector_pool_id = "3127d6c0-63f9-4b47-ba7e-f1ddbfa49c5a"
+
 # AWS & State
 aws_region       = "us-east-2"
 i_owner          = "your-name-or-team"
