@@ -43,68 +43,47 @@ variable "conjur_authn_login" {
   type        = string
 }
 
-variable "conjur_cyberark_client_id_path" {
-  description = "Conjur variable path for the CyberArk service account client ID"
+variable "conjur_idsec_username_path" {
+  description = "Conjur variable path for the idsec provider username"
   type        = string
 }
 
-variable "conjur_cyberark_client_secret_path" {
-  description = "Conjur variable path for the CyberArk service account client secret"
+variable "conjur_idsec_secret_path" {
+  description = "Conjur variable path for the idsec provider secret"
   type        = string
 }
 
 # ---------------------------------------------------------------------------
-# CyberArk Privilege Cloud provider credentials
-# Set via TF_VAR_cyberark_client_id / TF_VAR_cyberark_client_secret in CI/CD.
+# idsec provider credentials
+# Set via TF_VAR_idsec_username / TF_VAR_idsec_secret in CI/CD.
 # These values are fetched from Conjur using IAM auth before terraform apply.
 # ---------------------------------------------------------------------------
 
-variable "cyberark_identity_url" {
-  description = "CyberArk Identity tenant URL (e.g. https://example.id.cyberark.cloud)"
-  type        = string
-}
-
-variable "cyberark_pas_url" {
-  description = "CyberArk Privilege Cloud base URL (e.g. https://example.privilegecloud.cyberark.cloud)"
-  type        = string
-}
-
-variable "cyberark_client_id" {
-  description = "CyberArk service account client ID (sourced from Conjur via TF_VAR_)"
+variable "idsec_username" {
+  description = "idsec provider username (sourced from Conjur via TF_VAR_)"
   type        = string
   sensitive   = true
 }
 
-variable "cyberark_client_secret" {
-  description = "CyberArk service account client secret (sourced from Conjur via TF_VAR_)"
+variable "idsec_secret" {
+  description = "idsec provider secret (sourced from Conjur via TF_VAR_)"
   type        = string
   sensitive   = true
 }
 
 # ---------------------------------------------------------------------------
-# CyberArk safe
+# Privilege Cloud — safe
 # ---------------------------------------------------------------------------
 
 variable "cyberark_safe_name" {
-  description = "Name of the CyberArk safe that will hold Oracle DB credentials"
+  description = "Name of the Privilege Cloud safe that will hold Oracle DB credentials"
   type        = string
 }
 
 variable "create_cyberark_safe" {
-  description = "Create the CyberArk safe (set false if the safe already exists)"
+  description = "Create the Privilege Cloud safe (set false if the safe already exists)"
   type        = bool
   default     = true
-}
-
-variable "cyberark_safe_owner" {
-  description = "CyberArk user or group that owns the safe"
-  type        = string
-}
-
-variable "cyberark_safe_owner_type" {
-  description = "Type of safe owner: user, group, or role"
-  type        = string
-  default     = "user"
 }
 
 variable "cyberark_safe_retention_days" {
@@ -120,30 +99,127 @@ variable "cyberark_safe_retention_versions" {
 }
 
 variable "cyberark_cpm_name" {
-  description = "Name of the CyberArk Central Policy Manager (CPM) responsible for rotation"
+  description = "Name of the CPM user that will manage the safe"
   type        = string
   default     = "PasswordManager"
 }
 
 # ---------------------------------------------------------------------------
-# CyberArk account / UAP
+# Privilege Cloud — account / platform
 # ---------------------------------------------------------------------------
 
 variable "cyberark_platform_id" {
-  description = "CyberArk platform ID for Oracle Database accounts (as configured in your vault)"
+  description = "Privilege Cloud platform ID for Oracle Database accounts"
   type        = string
   default     = "Oracle"
 }
 
+# ---------------------------------------------------------------------------
+# Privilege Cloud — safe members (access policy)
+#
+# Map key   = member name (user or group)
+# member_type    accepted values : User | Group | Role
+# permission_set accepted values : connect_only | read_only | approver |
+#                                   accounts_manager | full | custom
+# ---------------------------------------------------------------------------
+
 variable "cyberark_access_members" {
   description = <<-EOT
-    Map of CyberArk safe members to create for the access policy.
-    Each key is the member name; value specifies the member type and permission level.
-    permission_level accepted values: read, approver, manager, full
+    Map of Privilege Cloud safe members for the access policy.
+    Each key is the member name; value specifies the member type and permission set.
   EOT
   type = map(object({
-    type             = string
-    permission_level = string
+    member_type    = string
+    permission_set = string
   }))
   default = {}
 }
+
+# ---------------------------------------------------------------------------
+# SIA — DB strong account
+# ---------------------------------------------------------------------------
+
+variable "idsec_strong_account_name_suffix" {
+  description = "Suffix appended to the DB instance ID to form the strong account name"
+  type        = string
+  default     = "strong"
+}
+
+# ---------------------------------------------------------------------------
+# SIA — DB workspace
+# ---------------------------------------------------------------------------
+
+variable "idsec_db_provider_engine" {
+  description = "SIA provider engine for the Oracle DB workspace (e.g. oracle-sh-vm)"
+  type        = string
+  default     = "oracle-sh-vm"
+}
+
+variable "idsec_db_configured_auth_method" {
+  description = "Configured authentication method type for the SIA DB workspace (e.g. local_db_auth)"
+  type        = string
+  default     = "local_db_auth"
+}
+
+# ---------------------------------------------------------------------------
+# SIA — DB access policy
+# ---------------------------------------------------------------------------
+
+variable "idsec_policy_name" {
+  description = "Name of the idsec DB access policy"
+  type        = string
+  default     = "oracle-db-access-policy"
+}
+
+variable "idsec_policy_timezone" {
+  description = "Timezone for the DB access policy (IANA format, e.g. America/New_York)"
+  type        = string
+  default     = "UTC"
+}
+
+variable "idsec_policy_principals" {
+  description = <<-EOT
+    List of principals (users, groups, or roles) that the DB policy applies to.
+    type accepted values: USER | GROUP | ROLE
+    source_directory_id / source_directory_name are required unless type is ROLE.
+  EOT
+  type = list(object({
+    id                    = string
+    name                  = string
+    type                  = string
+    source_directory_id   = optional(string)
+    source_directory_name = optional(string)
+  }))
+  default = []
+}
+
+variable "idsec_policy_oracle_dba_role" {
+  description = "Grant DBA role to users connecting via the DB access policy"
+  type        = bool
+  default     = false
+}
+
+variable "idsec_policy_oracle_sysdba_role" {
+  description = "Grant SYSDBA role to users connecting via the DB access policy"
+  type        = bool
+  default     = false
+}
+
+variable "idsec_policy_oracle_sysoper_role" {
+  description = "Grant SYSOPER role to users connecting via the DB access policy"
+  type        = bool
+  default     = false
+}
+
+variable "idsec_policy_oracle_roles" {
+  description = "List of Oracle roles assigned to users connecting via the DB access policy"
+  type        = list(string)
+  default     = ["CONNECT"]
+}
+
+variable "idsec_policy_max_session_duration" {
+  description = "Maximum session duration in hours for the DB access policy"
+  type        = number
+  default     = 8
+}
+

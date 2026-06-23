@@ -1,7 +1,7 @@
 # Copy to terraform.tfvars — do NOT commit terraform.tfvars to source control.
 #
-# CyberArk credentials (cyberark_client_id / cyberark_client_secret) must be
-# supplied as TF_VAR_ environment variables sourced from Conjur via IAM auth.
+# idsec credentials (idsec_username / idsec_secret) must be supplied as
+# TF_VAR_ environment variables sourced from Conjur via IAM auth.
 # Do NOT put these values in this file.
 
 # AWS & State
@@ -16,37 +16,68 @@ conjur_url         = "https://conjur.example.com"
 conjur_account     = "myaccount"
 conjur_authn_login = "host/aws/sts/my-terraform-role"
 
-# Conjur paths for CyberArk service account credentials
-conjur_cyberark_client_id_path     = "path/to/cyberark/client-id"
-conjur_cyberark_client_secret_path = "path/to/cyberark/client-secret"
+# Conjur paths for idsec provider credentials
+conjur_idsec_username_path = "path/to/idsec/username"
+conjur_idsec_secret_path   = "path/to/idsec/secret"
 
-# CyberArk Privilege Cloud URLs
-cyberark_identity_url = "https://example.id.cyberark.cloud"
-cyberark_pas_url      = "https://example.privilegecloud.cyberark.cloud"
-
-# cyberark_client_id and cyberark_client_secret are intentionally omitted here.
+# idsec_username and idsec_secret are intentionally omitted here.
 # Set them before running terraform apply:
 #
-#   export TF_VAR_cyberark_client_id=$(conjur variable get \
-#     -i "path/to/cyberark/client-id")
-#   export TF_VAR_cyberark_client_secret=$(conjur variable get \
-#     -i "path/to/cyberark/client-secret")
+#   export TF_VAR_idsec_username=$(conjur variable get \
+#     -i "path/to/idsec/username")
+#   export TF_VAR_idsec_secret=$(conjur variable get \
+#     -i "path/to/idsec/secret")
 
-# CyberArk Safe
+# Privilege Cloud — safe
 cyberark_safe_name               = "Oracle-DB-Safe"
 create_cyberark_safe             = true
-cyberark_safe_owner              = "vault-admin@example.com"
-cyberark_safe_owner_type         = "user"
 cyberark_safe_retention_days     = 7
 cyberark_safe_retention_versions = 5
 cyberark_cpm_name                = "PasswordManager"
 
-# CyberArk account / UAP
+# Privilege Cloud — account
 cyberark_platform_id = "Oracle"
 
-# Access policy — add users/groups that need to retrieve the Oracle credential.
-# permission_level: read | approver | manager | full
+# Privilege Cloud — safe members (access policy for vaulted credential)
+# permission_set: connect_only | read_only | approver | accounts_manager | full | custom
 cyberark_access_members = {
-  # "app-service@example.com" = { type = "user",  permission_level = "read" }
-  # "dba-team"                = { type = "group", permission_level = "read" }
+  # "app-service@example.com" = { member_type = "User",  permission_set = "read_only" }
+  # "dba-team"                = { member_type = "Group", permission_set = "full"      }
 }
+
+# SIA — strong account
+idsec_strong_account_name_suffix = "strong"
+
+# SIA — DB workspace
+idsec_db_provider_engine        = "oracle-sh-vm"
+idsec_db_configured_auth_method = "local_db_auth"
+
+# SIA — DB access policy
+idsec_policy_name             = "oracle-db-access-policy"
+idsec_policy_timezone         = "America/New_York"
+idsec_policy_max_session_duration = 8
+
+# Oracle role grants for policy sessions
+idsec_policy_oracle_dba_role     = false
+idsec_policy_oracle_sysdba_role  = false
+idsec_policy_oracle_sysoper_role = false
+idsec_policy_oracle_roles        = ["CONNECT"]
+
+# Principals that the policy applies to.
+# type: USER | GROUP | ROLE
+# source_directory_id / source_directory_name are required unless type is ROLE.
+idsec_policy_principals = [
+  # {
+  #   id                    = "DBA_Role"
+  #   name                  = "DbaRole"
+  #   type                  = "ROLE"
+  # },
+  # {
+  #   id                    = "jdoe@example.com"
+  #   name                  = "John Doe"
+  #   type                  = "USER"
+  #   source_directory_id   = "your-directory-uuid"
+  #   source_directory_name = "Active Directory"
+  # }
+]
+
