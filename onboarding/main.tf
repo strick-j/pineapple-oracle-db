@@ -21,18 +21,6 @@ locals {
 }
 
 # ---------------------------------------------------------------------------
-# Verify idsec credential paths in Conjur are reachable.
-# (Values are also validated here before any Privilege Cloud resources are
-#  created — see providers.tf note for why they cannot configure the idsec
-#  provider directly.)
-# ---------------------------------------------------------------------------
-
-locals {
-  conjur_idsec_username = data.conjur_secret.idsec_username.value
-  conjur_idsec_secret   = data.conjur_secret.idsec_secret.value
-}
-
-# ---------------------------------------------------------------------------
 # Convenience local: safe_id for use in safe members.
 # When the safe is created here, use the resource output. Otherwise fall back
 # to the safe name (valid for names without special characters).

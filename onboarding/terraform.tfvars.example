@@ -14,22 +14,17 @@ state_bucket     = "your-terraform-state-bucket"
 state_key_prefix = "pineapple-oracle-db"
 
 # Conjur — IAM host role authentication
-# CONJUR_AUTHN_IAM_SERVICE_ID must also be set as an environment variable.
-conjur_url         = "https://conjur.example.com"
-conjur_account     = "myaccount"
-conjur_authn_login = "host/aws/sts/my-terraform-role"
+conjur_appliance_url     = "https://conjur.example.com"
+conjur_account           = "myaccount"
+conjur_authn_type        = "iam"
+conjur_authn_service_id  = "pin-aws"
+conjur_host_id           = "host/aws/sts/my-terraform-role"
 
 # Conjur paths for idsec provider credentials
-conjur_idsec_username_path = "path/to/idsec/username"
-conjur_idsec_secret_path   = "path/to/idsec/secret"
-
-# idsec_username and idsec_secret are intentionally omitted here.
-# Set them before running terraform apply:
-#
-#   export TF_VAR_idsec_username=$(conjur variable get \
-#     -i "path/to/idsec/username")
-#   export TF_VAR_idsec_secret=$(conjur variable get \
-#     -i "path/to/idsec/secret")
+# These are fetched at apply time via the Conjur Terraform provider — no CLI or
+# TF_VAR_ environment variables are required.
+conjur_sca_username_path = "data/vault/MY-SAFE/MY-ACCOUNT/username"
+conjur_sca_password_path = "data/vault/MY-SAFE/MY-ACCOUNT/password"
 
 # Privilege Cloud — safe
 cyberark_safe_name               = "Oracle-DB-Safe"

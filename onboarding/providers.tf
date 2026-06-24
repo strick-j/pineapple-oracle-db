@@ -18,56 +18,39 @@ terraform {
 # Conjur provider — IAM host role authentication (authn-iam)
 #
 # Authentication flow:
-#   1. The host running Terraform carries an AWS IAM role.
-#   2. The Conjur authn-iam service validates that role against its policy.
+#   1. The EC2/ECS host running Terraform carries an AWS IAM role.
+#   2. Conjur validates the AWS STS identity against its authn-iam policy.
 #   3. No API key or helper script is required.
-#
-# Required environment variables:
-#   CONJUR_AUTHN_IAM_SERVICE_ID  — authn-iam service ID configured in your
-#                                  Conjur policy (commonly "aws").
-#
-# Provider reads CONJUR_APPLIANCE_URL / CONJUR_ACCOUNT / CONJUR_AUTHN_LOGIN
-# from the environment if the variables below are left empty.
 # ---------------------------------------------------------------------------
 provider "conjur" {
-  appliance_url = var.conjur_url
+  appliance_url = var.conjur_appliance_url
   account       = var.conjur_account
-  login         = var.conjur_authn_login
-  # api_key is intentionally omitted — IAM auth uses the AWS credential chain.
+  authn_type    = var.conjur_authn_type
+  service_id    = var.conjur_authn_service_id
+  host_id       = var.conjur_host_id
 }
 
 # ---------------------------------------------------------------------------
 # Retrieve idsec provider credentials from Conjur.
 #
-# NOTE — Terraform provider blocks are evaluated before data sources, so these
-# values cannot directly configure the idsec provider in the same apply run.
-# The recommended pattern for CI/CD pipelines is:
-#
-#   export TF_VAR_idsec_username=$(conjur variable get \
-#     -i "$CONJUR_IDSEC_USERNAME_PATH")
-#   export TF_VAR_idsec_secret=$(conjur variable get \
-#     -i "$CONJUR_IDSEC_SECRET_PATH")
-#
-# The data sources below verify the Conjur paths are reachable before any
-# idsec resources are created.
+# Because conjur and idsec are independent providers with no circular
+# dependency, Terraform can evaluate these data sources and feed their values
+# directly into the idsec provider block below — no CLI or TF_VAR_ wrappers
+# are needed.
 # ---------------------------------------------------------------------------
-data "conjur_secret" "idsec_username" {
-  name = var.conjur_idsec_username_path
+data "conjur_secret" "sca_username" {
+  name = var.conjur_sca_username_path
 }
 
-data "conjur_secret" "idsec_secret" {
-  name = var.conjur_idsec_secret_path
+data "conjur_secret" "sca_password" {
+  name = var.conjur_sca_password_path
 }
 
 # ---------------------------------------------------------------------------
-# idsec provider — CyberArk Identity authentication
-#
-# Credentials are sourced from sensitive input variables. In CI/CD pipelines
-# these are set via TF_VAR_idsec_username / TF_VAR_idsec_secret which are
-# populated using IAM auth to Conjur (see note above).
+# idsec provider — credentials sourced directly from Conjur data sources.
 # ---------------------------------------------------------------------------
 provider "idsec" {
   auth_method = "identity"
-  username    = var.idsec_username
-  secret      = var.idsec_secret
+  username    = data.conjur_secret.sca_username.value
+  secret      = data.conjur_secret.sca_password.value
 }

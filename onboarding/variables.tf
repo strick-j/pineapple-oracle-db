@@ -37,7 +37,7 @@ variable "i_owner" {
 # Conjur — IAM host role authentication
 # ---------------------------------------------------------------------------
 
-variable "conjur_url" {
+variable "conjur_appliance_url" {
   description = "Conjur appliance HTTPS URL (e.g. https://conjur.example.com)"
   type        = string
 }
@@ -47,37 +47,30 @@ variable "conjur_account" {
   type        = string
 }
 
-variable "conjur_authn_login" {
+variable "conjur_authn_type" {
+  description = "Conjur authenticator type (e.g. iam)"
+  type        = string
+  default     = "iam"
+}
+
+variable "conjur_authn_service_id" {
+  description = "Conjur authn-iam service ID as configured in Conjur policy (e.g. pin-aws)"
+  type        = string
+}
+
+variable "conjur_host_id" {
   description = "Conjur host identity for the IAM role (e.g. host/aws/sts/my-role)"
   type        = string
 }
 
-variable "conjur_idsec_username_path" {
+variable "conjur_sca_username_path" {
   description = "Conjur variable path for the idsec provider username"
   type        = string
 }
 
-variable "conjur_idsec_secret_path" {
-  description = "Conjur variable path for the idsec provider secret"
+variable "conjur_sca_password_path" {
+  description = "Conjur variable path for the idsec provider password"
   type        = string
-}
-
-# ---------------------------------------------------------------------------
-# idsec provider credentials
-# Set via TF_VAR_idsec_username / TF_VAR_idsec_secret in CI/CD.
-# These values are fetched from Conjur using IAM auth before terraform apply.
-# ---------------------------------------------------------------------------
-
-variable "idsec_username" {
-  description = "idsec provider username (sourced from Conjur via TF_VAR_)"
-  type        = string
-  sensitive   = true
-}
-
-variable "idsec_secret" {
-  description = "idsec provider secret (sourced from Conjur via TF_VAR_)"
-  type        = string
-  sensitive   = true
 }
 
 # ---------------------------------------------------------------------------
